@@ -3,3 +3,7 @@ torch
 six
 regex
 numpy
+
+deepspeed
+wandb
+tensorboard
