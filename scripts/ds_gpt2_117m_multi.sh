@@ -1,23 +1,5 @@
-#!/bin/bash
-#YBATCH -r am_4
-#SBATCH --ntasks=8
-#SBATCH --nodes=2
-#SBATCH --ntasks-per-node=4
-#SBATCH --job-name=ds
-#SBATCH --time=1-00:00:00
-#SBATCH --output outputs/%j.out
-#SBATCH --error errors/%j.err
-. /etc/profile.d/modules.sh
-module load cuda/11.7
-module load cudnn/cuda-11.x/8.9.0
-module load nccl/cuda-11.7/2.14.3
-module load openmpi/4.0.5
 
 source .env/bin/activate
-
-# muti-node settings
-MASTER_NODE=$(/usr/sbin/ip a show | grep inet | grep 192.168.205 | head -1 | cut -d " " -f 6 | cut -d "/" -f 1)
-MASTER_PORT=$((10000 + ($SLURM_JOBID % 50000)))
 
 # Dataset path & checkpoint path
 DATASET_PATH=dataset/BookCorpusDataset_text_document
@@ -34,7 +16,7 @@ NUM_ATTN_HEADS=12
 
 # GPU resources
 NUM_NODES=2
-NUM_GPUS_PER_NODE=4
+NUM_GPUS_PER_NODE=1
 NUM_GPUS=$((${NUM_NODES} * ${NUM_GPUS_PER_NODE}))
 
 # Parellel parameters
@@ -70,8 +52,6 @@ export CUDA_LAUNCH_BLOCKING=1
 # Run Command
 deepspeed --force_multi --num_nodes ${NUM_NODES} \
   --num_gpus ${NUM_GPUS_PER_NODE} \
-  --master_addr ${MASTER_NODE} \
-  --master_port ${MASTER_PORT} \
   --hostfile ./hostfile \
   pretrain_gpt.py \
   --tensor-model-parallel-size ${TP_SIZE} \
