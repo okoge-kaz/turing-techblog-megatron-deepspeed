@@ -1,5 +1,16 @@
-#! /bin/bash
+#!/bin/bash
+#YBATCH -r dgx-a100_8
+#SBATCH --job-name=gpt
+#SBATCH --time=1-00:00:00
+#SBATCH --output outputs/%j.out
+#SBATCH --error errors/%j.err
+. /etc/profile.d/modules.sh
+module load cuda/11.7
+module load cudnn/cuda-11.x/8.9.0
+module load nccl/cuda-11.7/2.14.3
+module load openmpi/4.0.5
 
+source .env/bin/activate
 # Runs the "345M" parameter model
 
 GPUS_PER_NODE=8
@@ -10,8 +21,8 @@ NNODES=1
 NODE_RANK=0
 WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
 
-DATA_PATH=<Specify path and file prefix>_text_document
-CHECKPOINT_PATH=<Specify path>
+DATA_PATH=dataset/BookCorpusDataset_text_document
+CHECKPOINT_PATH=checkpoints/gpt2_345m/8gpu
 
 DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
 
@@ -29,8 +40,8 @@ python -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --save $CHECKPOINT_PATH \
        --load $CHECKPOINT_PATH \
        --data-path $DATA_PATH \
-       --vocab-file gpt2-vocab.json \
-       --merge-file gpt2-merges.txt \
+       --vocab-file dataset/gpt2-vocab.json \
+       --merge-file dataset/gpt2-merges.txt \
        --data-impl mmap \
        --split 949,50,1 \
        --distributed-backend nccl \

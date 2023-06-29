@@ -1,12 +1,28 @@
-#! /bin/bash
+#!/bin/bash
+#YBATCH -r a100_1
+#SBATCH --job-name=gpt
+#SBATCH --time=1-00:00:00
+#SBATCH --output outputs/%j.out
+#SBATCH --error errors/%j.err
+. /etc/profile.d/modules.sh
+module load cuda/11.7
+module load cudnn/cuda-11.x/8.9.0
+module load nccl/cuda-11.7/2.14.3
+module load openmpi/4.0.5
 
 # Runs the "345M" parameter model
+
+source .env/bin/activate
 
 RANK=0
 WORLD_SIZE=1
 
-DATA_PATH=<Specify path and file prefix>_text_document
-CHECKPOINT_PATH=<Specify path>
+DATA_PATH=dataset/BookCorpusDataset_text_document
+CHECKPOINT_PATH=checkpoints/gpt2_345m/1gpu
+
+mkdir -p $CHECKPOINT_PATH
+
+export LOCAL_RANK=$RANK
 
 
 python pretrain_gpt.py \
@@ -22,8 +38,8 @@ python pretrain_gpt.py \
        --save $CHECKPOINT_PATH \
        --load $CHECKPOINT_PATH \
        --data-path $DATA_PATH \
-       --vocab-file gpt2-vocab.json \
-       --merge-file gpt2-merges.txt \
+       --vocab-file dataset/gpt2-vocab.json \
+       --merge-file dataset/gpt2-merges.txt \
        --data-impl mmap \
        --split 949,50,1 \
        --distributed-backend nccl \
