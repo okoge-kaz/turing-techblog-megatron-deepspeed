@@ -185,3 +185,5 @@ outputs/*.out
 dataset/gpt2-merges.txt
 dataset/gpt2-vocab.json
 dataset/BookCorpus*
+
+hostfile
